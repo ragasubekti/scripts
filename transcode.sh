@@ -12,24 +12,36 @@ find_cmd_params() {
     for _format in "${ACCEPTED_FORMAT[@]}"; do
         ! [[ $_format = "${ACCEPTED_FORMAT[0]}" ]] && _iname="${_iname} -o"
 
-        _iname="${_iname} -iname \"*.${_format}\""
+        _iname="${_iname} -iname *.${_format}"
     done
 
     echo $_iname
 }
 
 transcode_ffmpeg() {
-    # ffmpeg -i $1
-    exit 0
+    local _input=$1
+    local _filename=$(basename "$_input")
+
+    # Q: Do we really need to specify the VAAPI device?
+
+    ffmpeg \
+        -hide_banner \
+        -v fatal \
+        -stats \
+        -hwaccel vaapi \
+        -hwaccel_device /dev/dri/renderD128 \
+        -i "${_input}" \
+        -c:v h265_vaapi \
+        "${TARGET_DIRECTORY}/${_filename}"
 }
+
+export -f transcode_ffmpeg
 
 get_files() {
-    ! [[ -d $SOURCE_DIRECTORY  ]] && exit 2
+    ! [[ -d "${SOURCE_DIRECTORY}"  ]] && exit 2
     _params=$(find_cmd_params)
 
-    find "${SOURCE_DIRECTORY}" ${_params} -print0 | xargs -0 -I {} bash -c 'transcode_ffmpeg "$@"' _ {}
+    find "${SOURCE_DIRECTORY}" ${params} -print0 | xargs -0 -I {} bash -c 'transcode_ffmpeg "$@"' _ {}
 }
-
-
 
 get_files
