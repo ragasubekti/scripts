@@ -13,7 +13,7 @@ EOF
 }
 
 flatpak list --app --columns=application | while read _APPID; do
-    _CMD="$(flatpak info -m $appid | awk -F= '/^command=/ {print $2}')"
+    _CMD="$(flatpak info -m $_APPID | awk -F= '/^command=/ {print $2}')"
     _CMD="$(basename $_CMD)"
 
     create_shims "$_APPID" "$_CMD"
